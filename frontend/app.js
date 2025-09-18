@@ -5,27 +5,93 @@ const statusEl = $("#status");
 const progressBar = $("#progressBar");
 const durationSel = $("#duration");
 const sourceUrlInput = $("#sourceUrl");
-const userIdInput = $("#userId");
 
 let allQA = [];
 let timer = null;
 let remaining = 0;
 let total = 0;
 let paused = false;
+let currentUser = null;
 
 const QUESTION_MAP = { 10: 1, 20: 2, 30: 3 };
 
 init();
 
 async function init(){
-  await loadQuestions(sourceUrlInput.value);
-  $("#toggleSettings").addEventListener("click", toggleSettings);
-  $("#startSession").addEventListener("click", startSession);
-  $("#pauseResume").addEventListener("click", pauseResume);
-  $("#resetSession").addEventListener("click", resetSession);
-  $("#reloadQuestions").addEventListener("click", () => loadQuestions(sourceUrlInput.value));
-  $("#reviewBtn").addEventListener("click", openReview);
-  updateCountdown(0,0);
+  // Check authentication
+  const token = localStorage.getItem('sessionToken');
+  if (!token) {
+    // Redirect to login page if not authenticated
+    window.location.href = '/login.html';
+    return;
+  }
+  
+  try {
+    // Verify token
+    const response = await fetch('/.netlify/functions/auth-verify', {
+      headers: {
+        'Authorization': `Bearer ${token}`
+      }
+    });
+    
+    if (!response.ok) {
+      throw new Error('Authentication failed');
+    }
+    
+    const data = await response.json();
+    currentUser = data.username;
+    
+    // Update UI with username
+    const userDisplay = document.createElement('div');
+    userDisplay.className = 'user-display';
+    userDisplay.innerHTML = `
+      <span>Logged in as: <strong>${currentUser}</strong></span>
+      <button id="logoutBtn" class="btn">Logout</button>
+    `;
+    document.querySelector('header').appendChild(userDisplay);
+    $('#logoutBtn').addEventListener('click', logout);
+    
+    // Load questions and set up event listeners
+    await loadQuestions(sourceUrlInput.value);
+    $("#toggleSettings").addEventListener("click", toggleSettings);
+    $("#startSession").addEventListener("click", startSession);
+    $("#pauseResume").addEventListener("click", pauseResume);
+    $("#resetSession").addEventListener("click", resetSession);
+    $("#reloadQuestions").addEventListener("click", () => loadQuestions(sourceUrlInput.value));
+    $("#reviewBtn").addEventListener("click", openReview);
+    $("#testFunction").addEventListener("click", testNetlifyFunction);
+    updateCountdown(0,0);
+    
+    setStatus(`Welcome, ${currentUser}! Loaded ${allQA.length} items.`);
+  } catch (error) {
+    console.error('Authentication error:', error);
+    localStorage.removeItem('sessionToken');
+    localStorage.removeItem('username');
+    window.location.href = '/login.html';
+  }
+}
+
+function logout() {
+  localStorage.removeItem('sessionToken');
+  localStorage.removeItem('username');
+  window.location.href = '/login.html';
+}
+
+// Test function to verify Netlify Functions are working
+async function testNetlifyFunction() {
+  try {
+    setStatus("Testing Netlify function...");
+    const response = await fetch("/.netlify/functions/test");
+    if (!response.ok) {
+      throw new Error(`HTTP error! Status: ${response.status}`);
+    }
+    const data = await response.json();
+    setStatus(`Test successful: ${data.message} at ${data.timestamp}`);
+    console.log("Test function response:", data);
+  } catch (error) {
+    setStatus(`Test failed: ${error.message}`);
+    console.error("Test function error:", error);
+  }
 }
 
 async function loadQuestions(url){
@@ -41,33 +107,47 @@ async function loadQuestions(url){
   }
 }
 
-function getUserId(){
-  const id = (userIdInput.value || "").trim();
-  if(!id) throw new Error("Enter a User ID in settings (email or nickname).");
-  return id;
-}
 
 async function startSession(){
   try{
     const minutes = Number(durationSel.value);
     const numQ = QUESTION_MAP[minutes] ?? 1;
-    const userId = getUserId();
+    const token = localStorage.getItem('sessionToken');
+
+    // Debug log
+    console.log("Starting session with params:", { numQ, totalItems: allQA.length });
+    setStatus("Calling sessions-next function...");
 
     const resp = await fetch("/.netlify/functions/sessions-next", {
       method: "POST",
-      headers: {"content-type":"application/json"},
-      body: JSON.stringify({ userId, numQ, totalItems: allQA.length })
+      headers: {
+        "content-type": "application/json",
+        "Authorization": `Bearer ${token}`
+      },
+      body: JSON.stringify({ numQ, totalItems: allQA.length })
     });
-    if(!resp.ok) throw new Error("Server error getting next indices");
-    const { indices, sessionId } = await resp.json();
+    
+    console.log("Response status:", resp.status);
+    if(!resp.ok) {
+      const errorText = await resp.text();
+      console.error("Error response:", errorText);
+      throw new Error(`Server error getting next indices (${resp.status}): ${errorText}`);
+    }
+    
+    const data = await resp.json();
+    console.log("Response data:", data);
+    const { indices, sessionId } = data;
 
     const selected = indices.map(idx => ({...allQA[idx % allQA.length], _idx: idx % allQA.length}));
     renderCards(selected);
 
     await fetch("/.netlify/functions/sessions-save", {
       method: "POST",
-      headers: {"content-type":"application/json"},
-      body: JSON.stringify({ userId, sessionId, minutes, items: indices })
+      headers: {
+        "content-type": "application/json",
+        "Authorization": `Bearer ${token}`
+      },
+      body: JSON.stringify({ sessionId, minutes, items: indices })
     });
 
     total = minutes * 60;
@@ -150,10 +230,27 @@ function updateCountdown(rem, tot){
 
 async function openReview(){
   try{
-    const userId = getUserId();
-    const res = await fetch(`/.netlify/functions/sessions-list?userId=${encodeURIComponent(userId)}`);
-    if(!res.ok) throw new Error("Failed to load sessions");
+    const token = localStorage.getItem('sessionToken');
+    
+    // Debug log
+    console.log("Opening review for user:", currentUser);
+    setStatus("Fetching session list...");
+    
+    const res = await fetch("/.netlify/functions/sessions-list", {
+      headers: {
+        "Authorization": `Bearer ${token}`
+      }
+    });
+    
+    console.log("Response status:", res.status);
+    if(!res.ok) {
+      const errorText = await res.text();
+      console.error("Error response:", errorText);
+      throw new Error(`Failed to load sessions (${res.status}): ${errorText}`);
+    }
+    
     const data = await res.json();
+    console.log("Sessions data:", data);
 
     const dlg = document.querySelector("#reviewDialog");
     const listEl = document.querySelector("#sessionList");

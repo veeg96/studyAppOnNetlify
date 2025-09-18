@@ -42,3 +42,26 @@ input, select { background:#0f1733; color: var(--text); border:1px solid var(--b
 
 .dialog { background: var(--panel); color: var(--text); border:1px solid var(--border); border-radius: 12px; padding: 16px; }
 .footer { color: var(--muted); text-align:center; padding: 24px; }
+
+/* User authentication styles */
+.user-display {
+  display: flex;
+  align-items: center;
+  justify-content: flex-end;
+  gap: 12px;
+  margin-top: 8px;
+  color: var(--muted);
+}
+.user-display strong {
+  color: var(--accent);
+}
+.session-item {
+  padding: 10px;
+  border-radius: 6px;
+  background: var(--panel);
+  margin-bottom: 8px;
+  cursor: pointer;
+}
+.session-item:hover {
+  background: #1a2545;
+}
