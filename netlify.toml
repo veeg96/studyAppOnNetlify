@@ -1,0 +1,19 @@
+[build]
+  publish = "frontend"
+  functions = "netlify/functions"
+
+[functions]
+  node_bundler = "esbuild"
+  external_node_modules = ["@netlify/blobs"]
+
+# Add specific redirect for Netlify Functions
+[[redirects]]
+  from = "/.netlify/functions/*"
+  to = "/.netlify/functions/:splat"
+  status = 200
+
+# Add SPA redirect rule to handle client-side routing
+[[redirects]]
+  from = "/*"
+  to = "/index.html"
+  status = 200

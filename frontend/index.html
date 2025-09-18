@@ -1,0 +1,62 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Study Sprint</title>
+  <link rel="stylesheet" href="styles.css">
+</head>
+<body>
+  <header class="container">
+    <h1>Study Sprint</h1>
+    <div class="status">
+      <span id="status">Idle.</span>
+      <span id="countdown" class="countdown">00:00</span>
+    </div>
+    <div class="progress"><div id="progressBar"></div></div>
+  </header>
+
+  <main class="container">
+    <section class="toolbar">
+      <button id="toggleSettings" aria-expanded="false" class="btn">Settings</button>
+      <button id="startSession" class="btn primary">Start</button>
+      <button id="pauseResume" class="btn" disabled>Pause</button>
+      <button id="resetSession" class="btn" disabled>Reset</button>
+      <button id="reviewBtn" class="btn">Review Sessions</button>
+      <button id="testFunction" class="btn">Test Function</button>
+    </section>
+
+    <section id="settings" class="panel hidden">
+      <div class="grid">
+        <label> User ID
+          <input id="userId" placeholder="email or nickname" />
+        </label>
+        <label> Duration
+          <select id="duration">
+            <option value="10">10 min</option>
+            <option value="20">20 min</option>
+            <option value="30">30 min</option>
+          </select>
+        </label>
+        <label> Source URL
+          <input id="sourceUrl" value="questions.json" />
+        </label>
+        <div class="actions">
+          <button id="reloadQuestions" class="btn">Reload Questions</button>
+        </div>
+      </div>
+    </section>
+
+    <section id="cards" class="cards"></section>
+  </main>
+
+  <dialog id="reviewDialog" class="dialog">
+    <h3>Past Sessions</h3>
+    <div id="sessionList"></div>
+    <button class="btn" onclick="this.closest('dialog').close()">Close</button>
+  </dialog>
+
+  <footer class="container footer">Built with Netlify Functions + Blobs</footer>
+  <script src="app.js"></script>
+</body>
+</html>
