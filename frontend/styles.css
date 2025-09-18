@@ -65,3 +65,25 @@ input, select { background:#0f1733; color: var(--text); border:1px solid var(--b
 .session-item:hover {
   background: #1a2545;
 }
+
+/* Duration dialog styles */
+.duration-options {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+  margin: 20px 0;
+}
+.duration-option {
+  padding: 12px;
+  text-align: center;
+  font-weight: bold;
+  background: var(--panel);
+  border: 1px solid var(--border);
+  border-radius: 8px;
+  cursor: pointer;
+  transition: background 0.2s;
+}
+.duration-option:hover {
+  background: #1a2545;
+  border-color: var(--primary);
+}

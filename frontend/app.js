@@ -3,8 +3,7 @@ const cardsEl = $("#cards");
 const countdownEl = $("#countdown");
 const statusEl = $("#status");
 const progressBar = $("#progressBar");
-const durationSel = $("#duration");
-const sourceUrlInput = $("#sourceUrl");
+const sourceUrl = "questions.json"; // Hardcoded source URL
 
 let allQA = [];
 let timer = null;
@@ -52,14 +51,18 @@ async function init(){
     $('#logoutBtn').addEventListener('click', logout);
     
     // Load questions and set up event listeners
-    await loadQuestions(sourceUrlInput.value);
-    $("#toggleSettings").addEventListener("click", toggleSettings);
-    $("#startSession").addEventListener("click", startSession);
+    await loadQuestions(sourceUrl);
+    $("#startSession").addEventListener("click", showDurationDialog);
     $("#pauseResume").addEventListener("click", pauseResume);
     $("#resetSession").addEventListener("click", resetSession);
-    $("#reloadQuestions").addEventListener("click", () => loadQuestions(sourceUrlInput.value));
     $("#reviewBtn").addEventListener("click", openReview);
     $("#testFunction").addEventListener("click", testNetlifyFunction);
+    
+    // Set up duration dialog buttons
+    document.querySelectorAll('.duration-option').forEach(btn => {
+      btn.addEventListener('click', selectDuration);
+    });
+    
     updateCountdown(0,0);
     
     setStatus(`Welcome, ${currentUser}! Loaded ${allQA.length} items.`);
@@ -108,14 +111,13 @@ async function loadQuestions(url){
 }
 
 
-async function startSession(){
+async function startSessionWithDuration(minutes){
   try{
-    const minutes = Number(durationSel.value);
     const numQ = QUESTION_MAP[minutes] ?? 1;
     const token = localStorage.getItem('sessionToken');
 
     // Debug log
-    console.log("Starting session with params:", { numQ, totalItems: allQA.length });
+    console.log("Starting session with params:", { minutes, numQ, totalItems: allQA.length });
     setStatus("Calling sessions-next function...");
 
     const resp = await fetch("/.netlify/functions/sessions-next", {
@@ -278,10 +280,13 @@ async function openReview(){
 }
 
 function setStatus(msg){ statusEl.textContent = msg; }
-function toggleSettings(){
-  const panel = document.querySelector("#settings");
-  const btn = document.querySelector("#toggleSettings");
-  const nowHidden = !panel.classList.toggle("hidden");
-  btn.setAttribute("aria-expanded", String(!nowHidden));
+function showDurationDialog() {
+  document.getElementById('durationDialog').showModal();
+}
+
+function selectDuration(event) {
+  const duration = event.target.getAttribute('data-duration');
+  document.getElementById('durationDialog').close();
+  startSessionWithDuration(Number(duration));
 }
 function escapeHTML(str){ return (str || "").replace(/[&<>"']/g, s => ({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#39;"}[s])); }
