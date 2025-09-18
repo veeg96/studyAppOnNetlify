@@ -50,8 +50,7 @@ async function init(){
     document.querySelector('header').appendChild(userDisplay);
     $('#logoutBtn').addEventListener('click', logout);
     
-    // Load questions and set up event listeners
-    await loadQuestions(sourceUrl);
+    // Set up event listeners
     $("#startSession").addEventListener("click", showDurationDialog);
     $("#pauseResume").addEventListener("click", pauseResume);
     $("#resetSession").addEventListener("click", resetSession);
@@ -65,7 +64,7 @@ async function init(){
     
     updateCountdown(0,0);
     
-    setStatus(`Welcome, ${currentUser}! Loaded ${allQA.length} items.`);
+    setStatus(`Welcome, ${currentUser}!`);
   } catch (error) {
     console.error('Authentication error:', error);
     localStorage.removeItem('sessionToken');
@@ -113,6 +112,10 @@ async function loadQuestions(url){
 
 async function startSessionWithDuration(minutes){
   try{
+    // Load questions first
+    setStatus("Loading questions...");
+    await loadQuestions(sourceUrl);
+    
     const numQ = QUESTION_MAP[minutes] ?? 1;
     const token = localStorage.getItem('sessionToken');
 
@@ -232,6 +235,10 @@ function updateCountdown(rem, tot){
 
 async function openReview(){
   try{
+    // Load questions first
+    setStatus("Loading questions...");
+    await loadQuestions(sourceUrl);
+    
     const token = localStorage.getItem('sessionToken');
     
     // Debug log
@@ -281,12 +288,22 @@ async function openReview(){
 
 function setStatus(msg){ statusEl.textContent = msg; }
 function showDurationDialog() {
-  document.getElementById('durationDialog').showModal();
+  console.log("Showing duration dialog");
+  const dialog = document.getElementById('durationDialog');
+  if (dialog) {
+    dialog.classList.remove('hidden');
+    // Add cancel button event listener
+    document.getElementById('cancelDuration').addEventListener('click', () => {
+      dialog.classList.add('hidden');
+    });
+  } else {
+    console.error("Duration dialog element not found");
+  }
 }
 
 function selectDuration(event) {
   const duration = event.target.getAttribute('data-duration');
-  document.getElementById('durationDialog').close();
+  document.getElementById('durationDialog').classList.add('hidden');
   startSessionWithDuration(Number(duration));
 }
 function escapeHTML(str){ return (str || "").replace(/[&<>"']/g, s => ({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#39;"}[s])); }

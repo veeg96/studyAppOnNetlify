@@ -87,3 +87,28 @@ input, select { background:#0f1733; color: var(--text); border:1px solid var(--b
   background: #1a2545;
   border-color: var(--primary);
 }
+
+/* Modal styles */
+.modal {
+  position: fixed;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  background-color: rgba(0, 0, 0, 0.7);
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  z-index: 1000;
+}
+.modal-content {
+  background: var(--panel);
+  padding: 20px;
+  border-radius: 12px;
+  border: 1px solid var(--border);
+  width: 90%;
+  max-width: 400px;
+}
+.hidden {
+  display: none;
+}

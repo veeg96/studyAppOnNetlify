@@ -28,15 +28,17 @@
     <section id="cards" class="cards"></section>
   </main>
 
-  <dialog id="durationDialog" class="dialog">
-    <h3>Select Session Duration</h3>
-    <div class="duration-options">
-      <button class="btn duration-option" data-duration="10">10 minutes (1 question)</button>
-      <button class="btn duration-option" data-duration="20">20 minutes (2 questions)</button>
-      <button class="btn duration-option" data-duration="30">30 minutes (3 questions)</button>
+  <div id="durationDialog" class="dialog modal hidden">
+    <div class="modal-content">
+      <h3>Select Session Duration</h3>
+      <div class="duration-options">
+        <button class="btn duration-option" data-duration="10">10 minutes (1 question)</button>
+        <button class="btn duration-option" data-duration="20">20 minutes (2 questions)</button>
+        <button class="btn duration-option" data-duration="30">30 minutes (3 questions)</button>
+      </div>
+      <button class="btn" id="cancelDuration">Cancel</button>
     </div>
-    <button class="btn" onclick="this.closest('dialog').close()">Cancel</button>
-  </dialog>
+  </div>
 
   <dialog id="reviewDialog" class="dialog">
     <h3>Past Sessions</h3>
